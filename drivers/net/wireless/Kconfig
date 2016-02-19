@@ -211,6 +211,7 @@ config USB_NET_RNDIS_WLAN
 	depends on m
 	depends on USB
 	depends on CFG80211
+	select USB_NET_DRIVERS
 	select USB_USBNET
 	select USB_NET_CDCETHER
 	select USB_NET_RNDIS_HOST
@@ -306,6 +307,6 @@ source "drivers/net/wireless/ti/Kconfig"
 source "drivers/net/wireless/zd1211rw/Kconfig"
 source "drivers/net/wireless/mwifiex/Kconfig"
 source "drivers/net/wireless/cw1200/Kconfig"
-#source "drivers/net/wireless/rsi/Kconfig"
+source "drivers/net/wireless/rsi/Kconfig"
 
 endif # WLAN

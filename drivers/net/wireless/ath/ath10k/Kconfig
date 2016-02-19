@@ -26,13 +26,15 @@ config ATH10K_DEBUG
 
 config ATH10K_DEBUGFS
 	bool "Atheros ath10k debugfs support"
-	depends on ATH10K
+	depends on ATH10K && DEBUG_FS
+	depends on RELAY
 	---help---
 	  Enabled debugfs support
 
 	  If unsure, say Y to make it easier to debug problems.
 
 config ATH10K_TRACING
+	depends on !KERNEL_3_4
 	bool "Atheros ath10k tracing support"
 	depends on ATH10K
 	depends on EVENT_TRACING

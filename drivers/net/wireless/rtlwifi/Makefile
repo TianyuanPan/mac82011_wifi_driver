@@ -28,5 +28,7 @@ obj-$(CPTCFG_RTL8723BE)		+= rtl8723be/
 obj-$(CPTCFG_RTL8188EE)		+= rtl8188ee/
 obj-$(CPTCFG_RTLBTCOEXIST)	+= btcoexist/
 obj-$(CPTCFG_RTL8723_COMMON)	+= rtl8723com/
+obj-$(CPTCFG_RTL8821AE)		+= rtl8821ae/
+obj-$(CPTCFG_RTL8192EE)		+= rtl8192ee/
 
 ccflags-y += -D__CHECK_ENDIAN__
