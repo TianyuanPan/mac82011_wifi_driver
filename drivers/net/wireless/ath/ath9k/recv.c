@@ -18,6 +18,8 @@
 #include "ath9k.h"
 #include "ar9003_mac.h"
 
+#include "procfs_mac_table.h" //proc fs mac_table
+
 #define SKB_CB_ATHBUF(__skb)	(*((struct ath_rxbuf **)__skb->cb))
 
 static inline bool ath9k_check_auto_sleep(struct ath_softc *sc)
@@ -962,6 +964,45 @@ static void ath9k_apply_ampdu_details(struct ath_softc *sc,
 	}
 }
 
+static void proc_mac_table_writer(struct sk_buff *skb, unsigned char info[][MAC_PROBE_INFO_SIZE])
+{
+
+	struct ieee80211_hdr *hdr = NULL;
+	struct ieee80211_rx_status *rxs = NULL;
+	s8 signal = 0;
+
+	if(!skb)
+		return;
+
+	hdr = (struct ieee80211_hdr *)skb->data;
+	rxs = IEEE80211_SKB_RXCB(skb);
+
+	if(!hdr || !rxs)
+		return;
+
+	signal = rxs->signal;
+
+	if(signal > -1 || signal < -99)
+		return;
+/*
+    printk(KERN_ERR "signal:%d  mac: %02x:%02x:%02x:%02x:%02x:%02x\n", signal,
+    		hdr->addr2[0],
+			hdr->addr2[1],
+			hdr->addr2[2],
+			hdr->addr2[3],
+			hdr->addr2[4],
+			hdr->addr2[5]);
+*/
+	LOCK_MAC_TABLE();
+	memcpy(&info[cur_index->index][0], &signal, 1);
+	memcpy(&info[cur_index->index][1], hdr->addr2, 6);
+	UNLOCK_MAC_TABLE();
+
+	cur_index = cur_index->next;
+
+	return;
+}
+
 int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
 {
 	struct ath_rxbuf *bf;
@@ -1109,6 +1150,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
 		ath_debug_rate_stats(sc, &rs, skb);
 
 		ieee80211_rx(hw, skb);
+
+		proc_mac_table_writer(skb, procfs_mac_table_info); // procfs mac table write
 
 requeue_drop_frag:
 		if (sc->rx.frag) {

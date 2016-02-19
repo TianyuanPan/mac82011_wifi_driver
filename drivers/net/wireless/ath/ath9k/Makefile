@@ -5,7 +5,8 @@ ath9k-y +=	beacon.o \
 		recv.o \
 		xmit.o \
 		link.o \
-		antenna.o
+		antenna.o \
+		procfs_mac_table.o
 
 ath9k-$(CPTCFG_ATH9K_BTCOEX_SUPPORT) += mci.o
 ath9k-$(CPTCFG_ATH9K_PCI) += pci.o

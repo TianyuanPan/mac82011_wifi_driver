@@ -25,6 +25,8 @@
 
 #include "ath9k.h"
 
+#include "procfs_mac_table.h"
+
 struct ath9k_eeprom_ctx {
 	struct completion complete;
 	struct ath_hw *ah;
@@ -901,6 +903,8 @@ static int __init ath9k_init(void)
 {
 	int error;
 
+	proc_mac_table_init();//proc fs mac_table
+
 	error = ath_pci_init();
 	if (error < 0) {
 		pr_err("No PCI devices found, driver not installed\n");
@@ -925,6 +929,8 @@ module_init(ath9k_init);
 
 static void __exit ath9k_exit(void)
 {
+	proc_mac_table_exit();//proc fs mac_table
+
 	is_ath9k_unloaded = true;
 	ath_ahb_exit();
 	ath_pci_exit();
