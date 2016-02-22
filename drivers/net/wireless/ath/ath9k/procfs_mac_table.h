@@ -15,6 +15,18 @@
 #include <linux/seq_file.h>
 #include <linux/mutex.h>
 
+#define  TABLE_MAX_LEN    1024
+#define  MAC_ADDR_LEN     6
+
+#define PROOC_ENTRY_NAME  "mac_probe_info"
+
+struct _mac_signal_t{
+	char c_signal;
+	unsigned char c_mac[MAC_ADDR_LEN];
+};
+
+typedef struct _mac_signal_t  mac_signal_t;
+
 struct _index_t {
 	int index;
 	struct _index_t *next;
@@ -22,24 +34,27 @@ struct _index_t {
 
 typedef struct _index_t index_t;
 
+extern spinlock_t mac_table_lock;
+
+
 #define LOCK_MAC_TABLE() do { \
-	mutex_lock(&mac_table_lock); \
+	spin_lock(&mac_table_lock); \
 } while (0)
 
 #define UNLOCK_MAC_TABLE() do { \
-	mutex_unlock(&mac_table_lock); \
+	spin_unlock(&mac_table_lock); \
 } while (0)
 
-extern struct mutex mac_table_lock;
 
-#define TAB_INDEX_SIZE       1024
-#define MAC_PROBE_INFO_SIZE  7
+#define TRY_LOCK_MAC_TABLE() do { \
+	if (!spin_trylock(&mac_table_lock)) return; \
+} while (0)
 
-#define PROOC_ENTRY_NAME  "mac_probe_info"
+
 
 extern index_t mac_table_index;
 extern index_t *cur_index;
-extern unsigned char procfs_mac_table_info[][MAC_PROBE_INFO_SIZE];
+extern mac_signal_t procfs_mac_table_info[TABLE_MAX_LEN];
 
 int  proc_mac_table_init(void);
 void proc_mac_table_exit(void);

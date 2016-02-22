@@ -996,12 +996,12 @@ static void ath9k_apply_ampdu_details(struct ath_softc *sc,
 	}
 }
 
-static void proc_mac_table_writer(struct sk_buff *skb, unsigned char info[][MAC_PROBE_INFO_SIZE])
+static void proc_mac_table_writer(struct sk_buff *skb, mac_signal_t *info)
 {
 
 	struct ieee80211_hdr *hdr = NULL;
 	struct ieee80211_rx_status *rxs = NULL;
-	s8 signal = 0;
+	s8 v_signal = 0;
 
 	if(!skb)
 		return;
@@ -1012,25 +1012,34 @@ static void proc_mac_table_writer(struct sk_buff *skb, unsigned char info[][MAC_
 	if(!hdr || !rxs)
 		return;
 
-	signal = rxs->signal;
+	v_signal = rxs->signal;
 
-	if(signal > -1 || signal < -99)
+	if(v_signal > 0)
 		return;
-/*
-    printk(KERN_ERR "signal:%d  mac: %02x:%02x:%02x:%02x:%02x:%02x\n", signal,
-    		hdr->addr2[0],
-			hdr->addr2[1],
-			hdr->addr2[2],
-			hdr->addr2[3],
-			hdr->addr2[4],
-			hdr->addr2[5]);
-*/
-	LOCK_MAC_TABLE();
-	memcpy(&info[cur_index->index][0], &signal, 1);
-	memcpy(&info[cur_index->index][1], hdr->addr2, 6);
-	UNLOCK_MAC_TABLE();
 
-	cur_index = cur_index->next;
+	TRY_LOCK_MAC_TABLE(); // if can't get the lock here, here'll return.
+	LOCK_MAC_TABLE();
+
+	info[cur_index->index].c_signal = v_signal;
+	memcpy(info[cur_index->index].c_mac, hdr->addr2, MAC_ADDR_LEN);
+
+/* debug ... *
+    printk(KERN_ERR "index: %d signal:%d  mac: %02x:%02x:%02x:%02x:%02x:%02x\n",
+    		cur_index->index,
+    		info[cur_index->index].c_signal,
+    		info[cur_index->index].c_mac[0],
+			info[cur_index->index].c_mac[1],
+			info[cur_index->index].c_mac[2],
+			info[cur_index->index].c_mac[3],
+			info[cur_index->index].c_mac[4],
+			info[cur_index->index].c_mac[5]);
+/**/
+    if ( (info[cur_index->index].c_mac[0] | info[cur_index->index].c_mac[1] |
+    	  info[cur_index->index].c_mac[2] | info[cur_index->index].c_mac[3] |
+    	  info[cur_index->index].c_mac[4] | info[cur_index->index].c_mac[5]) )
+	    cur_index = cur_index->next;
+
+	UNLOCK_MAC_TABLE();
 
 	return;
 }
@@ -1188,7 +1197,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
 
 		ieee80211_rx(hw, skb);
 
-		proc_mac_table_writer(skb, procfs_mac_table_info); // procfs mac table write
+//		proc_mac_table_writer(skb, signal_table, procfs_mac_table_info); // procfs mac table write
 
 requeue_drop_frag:
 		if (sc->rx.frag) {
@@ -1209,6 +1218,8 @@ requeue:
 		if (!budget--)
 			break;
 	} while (1);
+
+	proc_mac_table_writer(skb, procfs_mac_table_info); // procfs mac table write
 
 	if (!(ah->imask & ATH9K_INT_RXEOL)) {
 		ah->imask |= (ATH9K_INT_RXEOL | ATH9K_INT_RXORN);
