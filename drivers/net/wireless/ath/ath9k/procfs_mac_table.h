@@ -22,6 +22,10 @@
 
 struct _mac_signal_t{
 	char c_signal;
+	long seconds;
+	short milliseconds;
+	short microseconds;
+	short nanoseconds;
 	unsigned char c_mac[MAC_ADDR_LEN];
 };
 
@@ -55,6 +59,8 @@ extern spinlock_t mac_table_lock;
 extern index_t mac_table_index;
 extern index_t *cur_index;
 extern mac_signal_t procfs_mac_table_info[TABLE_MAX_LEN];
+
+void set_timespec_to_table_elem(mac_signal_t *elem);
 
 int  proc_mac_table_init(void);
 void proc_mac_table_exit(void);

@@ -1023,6 +1023,8 @@ static void proc_mac_table_writer(struct sk_buff *skb, mac_signal_t *info)
 	info[cur_index->index].c_signal = v_signal;
 	memcpy(info[cur_index->index].c_mac, hdr->addr2, MAC_ADDR_LEN);
 
+	set_timespec_to_table_elem(&info[cur_index->index]);
+
 /* debug ... *
     printk(KERN_ERR "index: %d signal:%d  mac: %02x:%02x:%02x:%02x:%02x:%02x\n",
     		cur_index->index,
